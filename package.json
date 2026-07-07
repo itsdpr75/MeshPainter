@@ -1,0 +1,20 @@
+{
+  "name": "meshpaint",
+  "version": "1.0.0",
+  "description": "3D Mesh Texture Painting - Electron + Three.js",
+  "main": "./out/main/main.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview"
+  },
+  "keywords": ["3d", "painting", "threejs", "electron"],
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-vite": "^2.3.0"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}
