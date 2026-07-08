@@ -474,7 +474,7 @@
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Descargar MeshPaint
         </a>
-        <a href="#source" class="btn btn-outline">
+        <a href="https://github.com/itsdpr75/MeshPainter" class="btn btn-outline" target="_blank">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Código fuente
         </a>
@@ -578,7 +578,7 @@
           <h3>Instalador Windows</h3>
           <p class="version">v1.0.0 — NSIS</p>
           <p class="desc">Instalador completo con directorio personalizable. Ideal para instalación permanente.</p>
-          <a href="#" class="btn btn-primary" id="dl-installer">Descargar .exe</a>
+          <a href="https://github.com/itsdpr75/MeshPainter/releases/download/v1.0.0/MeshPaint.Setup.1.0.0.exe" class="btn btn-primary">Descargar .exe</a>
         </div>
         <div class="download-card">
           <div class="download-icon">
@@ -587,7 +587,7 @@
           <h3>Portable</h3>
           <p class="version">v1.0.0 — win-unpacked</p>
           <p class="desc">Ejecutable sin instalación. Ejecuta directamente, sin modificar el sistema.</p>
-          <a href="#" class="btn btn-outline" id="dl-portable">Descargar portable</a>
+          <a href="https://github.com/itsdpr75/MeshPainter/releases/download/v1.0.0/win-unpacked.7z" class="btn btn-outline">Descargar portable</a>
         </div>
       </div>
     </div>
@@ -601,7 +601,7 @@
         <h3>Empieza a desarrollar</h3>
         <p>Clona el repositorio, instala dependencias y ejecuta en modo desarrollo. Requiere Node.js 18+ y pnpm.</p>
         <div class="code-cmd" id="code-cmd">
-          <span>git clone &lt;repo-url&gt; && cd meshpaint && pnpm install && pnpm dev</span>
+          <span>git clone https://github.com/itsdpr75/MeshPainter.git &amp;&amp; cd MeshPainter &amp;&amp; pnpm install &amp;&amp; pnpm dev</span>
           <button id="copy-btn">Copiar</button>
         </div>
       </div>
@@ -629,17 +629,6 @@
           copyBtn.classList.remove('copied');
         }, 2000);
       });
-    });
-
-    /* =========== DOWNLOAD BUTTONS =========== */
-    document.getElementById('dl-installer').addEventListener('click', (e) => {
-      e.preventDefault();
-      alert('Descarga disponible desde el repositorio.\n\nEjecuta: pnpm dist\n\nEl instalador se genera en dist/MeshPaint Setup 1.0.0.exe');
-    });
-
-    document.getElementById('dl-portable').addEventListener('click', (e) => {
-      e.preventDefault();
-      alert('La versión portable se genera junto con el instalador.\n\nEjecuta: pnpm dist\n\nEncontrarás MeshPaint.exe en dist/win-unpacked/');
     });
 
     /* =========== SMOOTH SCROLL =========== */
