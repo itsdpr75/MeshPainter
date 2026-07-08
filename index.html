@@ -44,6 +44,11 @@
       background-size: 24px 24px;
     }
 
+    @property --glow1-x { syntax: '<percentage>'; inherits: false; initial-value: 20%; }
+    @property --glow1-y { syntax: '<percentage>'; inherits: false; initial-value: 10%; }
+    @property --glow2-x { syntax: '<percentage>'; inherits: false; initial-value: 80%; }
+    @property --glow2-y { syntax: '<percentage>'; inherits: false; initial-value: 80%; }
+
     body::before {
       content: '';
       position: fixed;
@@ -51,8 +56,16 @@
       pointer-events: none;
       z-index: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(196,166,232,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(140,100,200,0.05) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at var(--glow1-x) var(--glow1-y), rgba(196,166,232,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at var(--glow2-x) var(--glow2-y), rgba(140,100,200,0.05) 0%, transparent 60%);
+      animation: floatGlows 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatGlows {
+      0%   { --glow1-x: 20%; --glow1-y: 10%; --glow2-x: 80%; --glow2-y: 80%; }
+      33%  { --glow1-x: 40%; --glow1-y: 25%; --glow2-x: 60%; --glow2-y: 60%; }
+      66%  { --glow1-x: 10%; --glow1-y: 35%; --glow2-x: 85%; --glow2-y: 55%; }
+      100% { --glow1-x: 20%; --glow1-y: 10%; --glow2-x: 80%; --glow2-y: 80%; }
     }
 
     /* =========== LAYOUT =========== */
@@ -611,7 +624,7 @@
   <!-- FOOTER -->
   <footer>
     <div class="container">
-      <p>MeshPaint — 3D Mesh Texture Painting · Construido con <a href="https://threejs.org" target="_blank">Three.js</a> y <a href="https://electronjs.org" target="_blank">Electron</a> · MIT License</p>
+      <p>MeshPaint — 3D Mesh Texture Painting · Construido con <a href="https://threejs.org" target="_blank">Three.js</a> y <a href="https://electronjs.org" target="_blank">Electron</a> · AGPL 3.0</p>
     </div>
   </footer>
 
