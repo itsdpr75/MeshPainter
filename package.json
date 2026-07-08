@@ -6,15 +6,47 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "preview": "electron-vite preview"
+    "preview": "electron-vite preview",
+    "dist": "electron-vite build && electron-builder --win nsis"
   },
-  "keywords": ["3d", "painting", "threejs", "electron"],
+  "keywords": [
+    "3d",
+    "painting",
+    "threejs",
+    "electron"
+  ],
   "license": "MIT",
   "devDependencies": {
     "electron": "^33.2.1",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0"
   },
   "dependencies": {
     "three": "^0.170.0"
+  },
+  "onlyBuiltDependencies": [
+    "electron",
+    "electron-winstaller",
+    "esbuild"
+  ],
+  "build": {
+    "appId": "com.meshpaint.app",
+    "productName": "MeshPaint",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": null
+    }
   }
 }

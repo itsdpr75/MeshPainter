@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeshPaint — 3D Texture Painting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* =========== RESET =========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* =========== VARIABLES =========== */
+    :root {
+      --bg-deep: #070212;
+      --bg-surface: #0b031a;
+      --bg-card: #100520;
+      --accent: #c4a6e8;
+      --accent-glow: #d4bcf5;
+      --accent-dim: #8b6fba;
+      --text-primary: #f0eaf8;
+      --text-secondary: #b8a0d8;
+      --text-muted: #7a6b99;
+      --border: #2e1d52;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow: 0 0 48px rgba(196,166,232,0.12);
+    }
+
+    /* =========== BASE =========== */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Albert Sans', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* Dotted background */
+      background-image: radial-gradient(circle, rgba(196,166,232,0.12) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(196,166,232,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(140,100,200,0.05) 0%, transparent 60%);
+    }
+
+    /* =========== LAYOUT =========== */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* =========== NAV =========== */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(18,6,36,0.85);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo svg { width: 28px; height: 28px; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent);
+      color: var(--bg-deep);
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .nav-cta:hover { background: var(--accent-glow); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(196,166,232,0.3); }
+
+    /* =========== HERO =========== */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(196,166,232,0.1);
+      border: 1px solid rgba(196,166,232,0.2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 28px;
+      letter-spacing: 0.02em;
+    }
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .hero h1 {
+      font-size: clamp(2.6rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 28px;
+      border-radius: 28px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-deep);
+      box-shadow: 0 4px 20px rgba(196,166,232,0.25);
+    }
+    .btn-primary:hover {
+      background: var(--accent-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(196,166,232,0.35);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid rgba(196,166,232,0.35);
+    }
+    .btn-outline:hover {
+      background: rgba(196,166,232,0.08);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* =========== PREVIEW =========== */
+    .preview {
+      padding: 0 0 60px;
+    }
+    .preview-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow), var(--shadow-glow);
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background-image:
+        linear-gradient(45deg, rgba(196,166,232,0.03) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(196,166,232,0.03) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(196,166,232,0.03) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(196,166,232,0.03) 75%);
+      background-size: 40px 40px;
+      background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+    }
+    .preview-content {
+      text-align: center;
+      padding: 40px;
+    }
+    .preview-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 32px rgba(196,166,232,0.2);
+    }
+    .preview-icon svg { width: 44px; height: 44px; }
+    .preview-content p { color: var(--text-muted); font-size: 0.9rem; max-width: 360px; }
+
+    /* =========== FEATURES =========== */
+    .features {
+      padding: 60px 0;
+    }
+    .section-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+      color: var(--text-primary);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .feature-card:hover {
+      border-color: rgba(196,166,232,0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 0 0 1px rgba(196,166,232,0.08);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(196,166,232,0.1);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .feature-icon svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    .feature-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* =========== TECH STACK =========== */
+    .tech {
+      padding: 60px 0;
+    }
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .tech-tag {
+      background: rgba(196,166,232,0.08);
+      border: 1px solid rgba(196,166,232,0.15);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tech-tag:hover {
+      background: rgba(196,166,232,0.15);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* =========== DOWNLOAD =========== */
+    .download {
+      padding: 60px 0 40px;
+    }
+    .download-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .download-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 32px 28px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .download-card.featured {
+      border-color: rgba(196,166,232,0.4);
+      background: linear-gradient(135deg, rgba(196,166,232,0.06) 0%, var(--bg-card) 60%);
+      box-shadow: var(--shadow-glow);
+    }
+    .download-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .download-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: rgba(196,166,232,0.1);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .download-icon svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .download-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+    .download-card .version { font-size: 0.82rem; color: var(--accent); font-weight: 500; margin-bottom: 6px; }
+    .download-card .desc { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .download-card .btn { width: 100%; justify-content: center; }
+
+    /* =========== SOURCE =========== */
+    .source {
+      padding: 40px 0 80px;
+      text-align: center;
+    }
+    .source-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 36px 48px;
+      transition: all 0.3s;
+    }
+    .source-card:hover {
+      border-color: rgba(196,166,232,0.35);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    .source-card h3 { font-size: 1.15rem; font-weight: 600; }
+    .source-card p { color: var(--text-muted); font-size: 0.88rem; max-width: 440px; line-height: 1.6; }
+    .code-cmd {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 8px 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: all;
+    }
+    .code-cmd:hover { border-color: var(--accent-dim); }
+    .code-cmd button {
+      background: rgba(196,166,232,0.15);
+      border: none;
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .code-cmd button:hover { background: rgba(196,166,232,0.28); }
+    .code-cmd button.copied { background: rgba(120,200,120,0.25); color: #8fda8f; }
+
+    /* =========== FOOTER =========== */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+    }
+    footer p { font-size: 0.82rem; color: var(--text-muted); }
+    footer a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+    footer a:hover { opacity: 0.8; }
+
+    /* =========== RESPONSIVE =========== */
+    @media (max-width: 640px) {
+      .nav-links { gap: 16px; font-size: 0.82rem; }
+      .hero { padding: 50px 0 40px; }
+      .hero h1 { font-size: 2rem; }
+      .hero .subtitle { font-size: 1rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .download-cards { grid-template-columns: 1fr; }
+      .source-card { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-logo">
+        <svg viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="12" height="12" rx="3" fill="#c4a6e8" opacity="0.9"/><rect x="18" y="2" width="12" height="12" rx="3" fill="#d4bcf5" opacity="0.6"/><rect x="10" y="18" width="12" height="12" rx="3" fill="#c4a6e8" opacity="0.75"/></svg>
+        MeshPaint
+      </a>
+      <div class="nav-links">
+        <a href="#features">Características</a>
+        <a href="#download">Descargar</a>
+        <a href="#source">Código</a>
+      </div>
+      <a href="#download" class="nav-cta">Descargar</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge"><span class="dot"></span> v1.0.0 — Windows</div>
+      <h1>Pinta texturas 3D<br>directamente sobre el modelo</h1>
+      <p class="subtitle">
+        MeshPaint es un editor de pintura de texturas 3D para Windows. Importa modelos GLB, pinta sobre sus materiales con pinceles configurables o usando la textura de otros materiales como tinta (Texture Brush), coloca decals arrastrando y soltando, y exporta el resultado como un nuevo GLB con las texturas incrustadas. Todo funciona en tiempo real sobre Three.js con una interfaz oscura profesional diseñada para flujos de trabajo rápidos.
+      </p>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Descargar MeshPaint
+        </a>
+        <a href="#source" class="btn btn-outline">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Código fuente
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREVIEW -->
+  <section class="preview">
+    <div class="container">
+      <div class="preview-box" style="background-image:none; background-color:var(--bg-card);">
+        <img src="media/ui-img.png" alt="Interfaz de MeshPaint" style="width:100%; height:100%; object-fit:cover; display:block;" loading="lazy">
+      </div>
+      <p style="text-align:center; margin-top:12px; color:var(--text-muted); font-size:0.85rem;">Interfaz de MeshPaint: panel de materiales a la izquierda, vista 3D central, pinceles y propiedades en la barra inferior</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <p class="section-label">Características</p>
+      <h2 class="section-title">Todo lo que necesitas para pintar en 3D</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2a4 4 0 00-4 4v1M12 2a4 4 0 014 4v1M8 7h8M5 11l-2 5 2 5h14l2-5-2-5"/></svg>
+          </div>
+          <h3>Pintura con pinceles</h3>
+          <p>Pinceles configurables con tamaño, opacidad y rotación. Importa tus propios PNG como pinceles personalizados con bordes suaves.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="2"/><rect x="14" y="2" width="8" height="8" rx="2" opacity="0.5"/><rect x="8" y="14" width="8" height="8" rx="2" opacity="0.7"/></svg>
+          </div>
+          <h3>Texture Brush</h3>
+          <p>Pinta usando la textura de cualquier material como "tinta". Mezcla materiales pintando uno sobre otro — las texturas se combinan en tiempo real.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M6 8v4l6 4 6-4V8"/></svg>
+          </div>
+          <h3>Materiales PBR</h3>
+          <p>Gestión completa de materiales con MeshPhysicalMaterial: albedo, normal, roughness, metalness, specular, AO y displacement. Texturas o valores numéricos.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+          </div>
+          <h3>Decals y gizmos</h3>
+          <p>Arrastra y suelta decals sobre la superficie del modelo. Transforma con gizmos W/E/R alineados a la normal. Sprites indicadores en el viewport.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 17l2 2 4-4M11 17l2 2 4-4M19 17l2 2M3 7l2-2 4 4M11 7l2-2 4 4M19 7l2-2"/></svg>
+          </div>
+          <h3>Import / Export GLB</h3>
+          <p>Carga modelos GLB (con Draco), pinta sobre sus texturas y exporta el resultado como un nuevo GLB con las texturas pintadas incrustadas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-4H4z"/><path d="M14 2v6h6"/><path d="M8 13h2M8 17h6"/></svg>
+          </div>
+          <h3>Undo / Redo</h3>
+          <p>100 estados de historial. Deshaz y rehaz pinceladas, creación y eliminación de decals. Atajos Ctrl+Z / Ctrl+Y.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="tech">
+    <div class="container">
+      <p class="section-label">Stack tecnológico</p>
+      <h2 class="section-title">Construido con herramientas modernas</h2>
+      <div class="tech-tags">
+        <span class="tech-tag">Electron 33</span>
+        <span class="tech-tag">Three.js 0.170</span>
+        <span class="tech-tag">WebGL 2</span>
+        <span class="tech-tag">Vanilla JavaScript</span>
+        <span class="tech-tag">ES Modules</span>
+        <span class="tech-tag">electron-vite</span>
+        <span class="tech-tag">pnpm</span>
+        <span class="tech-tag">electron-builder</span>
+        <span class="tech-tag">Draco</span>
+        <span class="tech-tag">GLTF 2.0</span>
+        <span class="tech-tag">MeshPhysicalMaterial</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="download" id="download">
+    <div class="container">
+      <p class="section-label">Descargar</p>
+      <h2 class="section-title">Consigue MeshPaint</h2>
+      <div class="download-cards">
+        <div class="download-card featured">
+          <div class="download-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Instalador Windows</h3>
+          <p class="version">v1.0.0 — NSIS</p>
+          <p class="desc">Instalador completo con directorio personalizable. Ideal para instalación permanente.</p>
+          <a href="#" class="btn btn-primary" id="dl-installer">Descargar .exe</a>
+        </div>
+        <div class="download-card">
+          <div class="download-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Portable</h3>
+          <p class="version">v1.0.0 — win-unpacked</p>
+          <p class="desc">Ejecutable sin instalación. Ejecuta directamente, sin modificar el sistema.</p>
+          <a href="#" class="btn btn-outline" id="dl-portable">Descargar portable</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCE -->
+  <section class="source" id="source">
+    <div class="container">
+      <p class="section-label">Código fuente</p>
+      <div class="source-card">
+        <h3>Empieza a desarrollar</h3>
+        <p>Clona el repositorio, instala dependencias y ejecuta en modo desarrollo. Requiere Node.js 18+ y pnpm.</p>
+        <div class="code-cmd" id="code-cmd">
+          <span>git clone &lt;repo-url&gt; && cd meshpaint && pnpm install && pnpm dev</span>
+          <button id="copy-btn">Copiar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>MeshPaint — 3D Mesh Texture Painting · Construido con <a href="https://threejs.org" target="_blank">Three.js</a> y <a href="https://electronjs.org" target="_blank">Electron</a> · MIT License</p>
+    </div>
+  </footer>
+
+  <script>
+    /* =========== COPY TO CLIPBOARD =========== */
+    const copyBtn = document.getElementById('copy-btn');
+    const codeCmd = document.getElementById('code-cmd');
+    copyBtn.addEventListener('click', () => {
+      const text = codeCmd.querySelector('span').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = '¡Copiado!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copiar';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+
+    /* =========== DOWNLOAD BUTTONS =========== */
+    document.getElementById('dl-installer').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Descarga disponible desde el repositorio.\n\nEjecuta: pnpm dist\n\nEl instalador se genera en dist/MeshPaint Setup 1.0.0.exe');
+    });
+
+    document.getElementById('dl-portable').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('La versión portable se genera junto con el instalador.\n\nEjecuta: pnpm dist\n\nEncontrarás MeshPaint.exe en dist/win-unpacked/');
+    });
+
+    /* =========== SMOOTH SCROLL =========== */
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+
+</body>
+</html>
